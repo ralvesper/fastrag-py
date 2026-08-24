@@ -42,22 +42,22 @@ make up
 
 ```bash
 # Indexar docs
-curl -X POST http://localhost:8000/demo/index-docs \
+curl -X POST http://localhost:8000/index-docs \
   -H "Content-Type: application/json" \
   -d '{"repo_paths": ["/caminho/para/docs"]}'
 
 # Re-indexar (limpa antes)
-curl -X POST http://localhost:8000/demo/index-docs \
+curl -X POST http://localhost:8000/index-docs \
   -H "Content-Type: application/json" \
   -d '{"repo_paths": ["/caminho/para/docs"], "reset": true}'
 
 # Buscar
-curl -X POST http://localhost:8000/demo/search \
+curl -X POST http://localhost:8000/search \
   -H "Content-Type: application/json" \
   -d '{"query": "como cancelar pedido"}'
 
 # Recomendar (RAG + LLM)
-curl -X POST http://localhost:8000/demo/recommend \
+curl -X POST http://localhost:8000/recommend \
   -H "Content-Type: application/json" \
   -d '{"query": "bug de creditDate"}'
 ```

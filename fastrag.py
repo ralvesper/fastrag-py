@@ -6,8 +6,7 @@ from routes import router
 # Entry point — roda com: uvicorn fastrag:app --reload --port 8000
 app = FastAPI(title="Fastrag API", description="RAG API for document indexing, search and recommendations", version="1.0.0")
 
-# Todas as rotas ficam sob /demo/ (ex: /demo/search, /demo/recommend)
-app.include_router(router, prefix="/demo")
+app.include_router(router)
 
 
 @app.get("/health")
