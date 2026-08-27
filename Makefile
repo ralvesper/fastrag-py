@@ -1,18 +1,18 @@
 .PHONY: run install build up down logs restart
 
 # Local
-run:
-	uvicorn fastrag:app --reload --port 8000
-
 install:
-	pip install -r requirements.txt
+	python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+
+run:
+	.venv/bin/uvicorn fastrag:app --reload --port 8000
 
 # Docker
 build:
 	docker compose build
 
 up:
-	docker compose up -d
+	docker compose up -d --build
 
 down:
 	docker compose down
@@ -20,5 +20,6 @@ down:
 logs:
 	docker compose logs -f app
 
+# Recria o container pra pegar mudanças no .env (restart não recarrega env)
 restart:
-	docker compose restart app
+	docker compose up -d --force-recreate app

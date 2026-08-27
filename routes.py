@@ -33,12 +33,8 @@ def index_docs_endpoint(req: IndexDocsRequest, db: Session = Depends(get_db)):
         db.execute(text("DELETE FROM documents"))
         db.commit()
     docs = scan_docs(req.repo_paths)
-    sources = {}
-    for doc in docs:
-        src = doc.metadata.get("source", "unknown") if doc.metadata else "unknown"
-        sources[src] = sources.get(src, 0) + 1
-    count = index_docs(db, docs)
-    return IndexDocsResponse(indexed=count, sources=sources)
+    indexed, updated, skipped, sources = index_docs(db, docs)
+    return IndexDocsResponse(indexed=indexed, updated=updated, skipped=skipped, sources=sources)
 
 
 @router.post("/search", response_model=SearchResponse)

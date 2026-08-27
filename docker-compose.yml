@@ -26,8 +26,9 @@ services:
       EMBEDDING_DIMS: 1536
       CHAT_MODEL: gemini-2.5-flash-lite
     volumes:
-      - /home/rodrigo/dev/github/ralvesper/projects/highonline-docs:/home/rodrigo/dev/github/ralvesper/projects/highonline-docs:ro
-      - /home/rodrigo/dev/github/ralvesper/projects/plx-tooling/plx-docs:/home/rodrigo/dev/github/ralvesper/projects/plx-tooling/plx-docs:ro
+      - /home/rodrigo/dev/sodexo/gitlab/rodrigo.pereira.ext/highonline/highonline-docs:/home/rodrigo/dev/sodexo/gitlab/rodrigo.pereira.ext/highonline/highonline-docs:ro
+      - /home/rodrigo/dev/sodexo/gitlab/pluxee-tooling/plx-docs:/home/rodrigo/dev/sodexo/gitlab/pluxee-tooling/plx-docs:ro
+      - /home/rodrigo/dev/sodexo/gitlab/core-backoffice/pluxee-issues:/home/rodrigo/dev/sodexo/gitlab/core-backoffice/pluxee-issues:ro
     depends_on:
       db:
         condition: service_healthy

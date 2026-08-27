@@ -29,6 +29,8 @@ class IndexDocsRequest(BaseModel):
 
 class IndexDocsResponse(BaseModel):
     indexed: int
+    updated: int = 0
+    skipped: int = 0
     sources: dict[str, int]
 
 

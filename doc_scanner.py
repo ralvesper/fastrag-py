@@ -1,3 +1,4 @@
+import hashlib
 import json
 import time
 from pathlib import Path
@@ -7,6 +8,10 @@ from sqlalchemy.orm import Session
 from indexing import embed_text
 from models import Document
 from schemas import DocumentIn
+
+
+def content_hash(content: str) -> str:
+    return hashlib.sha256(content.encode("utf-8")).hexdigest()
 
 
 def scan_docs(repo_paths: list[str]) -> list[DocumentIn]:
@@ -30,14 +35,47 @@ def scan_docs(repo_paths: list[str]) -> list[DocumentIn]:
                     "source": source,
                     "path": str(rel),
                     "filename": md.name,
+                    "hash": content_hash(content),
                 },
             ))
     return docs
 
 
-def index_docs(db: Session, docs: list[DocumentIn]) -> int:
-    for i, doc in enumerate(docs):
-        if i > 0 and i % 3 == 0:
+def _existing_by_path(db: Session) -> dict[tuple[str, str], Document]:
+    existing: dict[tuple[str, str], Document] = {}
+    for row in db.query(Document).all():
+        meta = json.loads(row.metadata_json) if row.metadata_json else {}
+        key = (meta.get("source", ""), meta.get("path", ""))
+        if key != ("", ""):
+            existing[key] = row
+    return existing
+
+
+def index_docs(db: Session, docs: list[DocumentIn]) -> tuple[int, int, int, dict[str, int]]:
+    """Indexa apenas docs novos ou alterados. Retorna (novos, atualizados, pulados, sources)."""
+    existing = _existing_by_path(db)
+    indexed = updated = skipped = 0
+    sources: dict[str, int] = {}
+    pending = 0
+    for doc in docs:
+        meta = doc.metadata or {}
+        key = (meta.get("source", ""), meta.get("path", ""))
+        old = existing.get(key)
+        if old is not None:
+            old_hash = json.loads(old.metadata_json).get("hash") if old.metadata_json else None
+            if old_hash == meta.get("hash"):
+                skipped += 1
+                continue
+            db.delete(old)
+            updated += 1
+        else:
+            indexed += 1
+
+        src = meta.get("source", "unknown")
+        sources[src] = sources.get(src, 0) + 1
+
+        # rate limit: pausa a cada 3 embeddings pra não estourar cota da API
+        if pending > 0 and pending % 3 == 0:
             time.sleep(3)
         for attempt in range(5):
             try:
@@ -49,12 +87,13 @@ def index_docs(db: Session, docs: list[DocumentIn]) -> int:
                     time.sleep(wait)
                 else:
                     raise
+        pending += 1
         record = Document(
             content=doc.content,
             doc_type=doc.doc_type,
-            metadata_json=json.dumps(doc.metadata),
+            metadata_json=json.dumps(meta),
             embedding_json=json.dumps(embedding),
         )
         db.add(record)
     db.commit()
-    return len(docs)
+    return indexed, updated, skipped, sources
